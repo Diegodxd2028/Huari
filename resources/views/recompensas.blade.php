@@ -47,8 +47,8 @@
                         <img src="{{ asset($r->imagen) }}" alt="Imagen de {{ $r->titulo }}" class="object-cover h-full w-full">
                     </div>
                     <div class="p-6">
-                        <h3 class="font-bold text-lg mb-2">{{ $r->titulo }}</h3>
-                        <p class="text-gray-600 text-sm mb-4">{{ $r->descripcion }}</p>
+                        <h3 class="font-bold text-lg mb-2">{{ $r->Titulo }}</h3>
+                        <p class="text-gray-600 text-sm mb-4">{{ $r->Descripcion }}</p>
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-green-600">{{ number_format($r->PuntosNecesarios) }} pts</span>
 

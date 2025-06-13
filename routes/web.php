@@ -64,4 +64,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/canjes', [AdminController::class, 'canjes'])->name('canjes');
     Route::get('/puntos', [AdminController::class, 'mostrarFormularioPuntos'])->name('puntos');
     Route::post('/puntos', [AdminController::class, 'asignarPuntos'])->name('puntos.asignar');
+    // Gestión de recompensas
+    Route::get('/recompensas', [RecompensasController::class, 'create'])->name('recompensas.create');
+    Route::post('/recompensas', [RecompensasController::class, 'store'])->name('recompensas.store');
 });

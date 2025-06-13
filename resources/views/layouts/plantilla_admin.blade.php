@@ -32,6 +32,10 @@
                class="block px-6 py-3 hover:bg-blue-100 {{ request()->routeIs('admin.puntos') ? 'bg-blue-200' : '' }}">
                 Añadir Puntos
             </a>
+            <a href="{{ route('admin.recompensas.create') }}"
+               class="block px-6 py-3 hover:bg-blue-100 {{ request()->routeIs('admin.recompensas.create') ? 'bg-blue-200' : '' }}">
+                Agregar Recompensa
+            </a>
         </nav>
         <div class="p-6 border-t">
             <form method="POST" action="{{ route('logout') }}">
@@ -57,6 +61,4 @@
     </main>
 
 </body>
-</html>
-
 </html>

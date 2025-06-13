@@ -25,7 +25,7 @@
                             <td class="border p-2">
                                 {{ optional($canje->usuario)->name }} {{ optional($canje->usuario)->apellido_paterno }} {{ optional($canje->usuario)->apellido_materno }}
                             </td>
-                            <td class="border p-2">{{ optional($canje->recompensa)->Nombre ?? 'Recompensa eliminada' }}</td>
+                            <td class="border p-2">{{ optional($canje->recompensa)->Titulo ?? 'Recompensa eliminada' }}</td>
                             <td class="border p-2">{{ $canje->Cantidad }}</td>
                             <td class="border p-2">{{ $canje->PuntosUtilizados }}</td>
                             <td class="border p-2">{{ $canje->created_at->format('d/m/Y H:i') }}</td>

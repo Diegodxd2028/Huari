@@ -1,149 +1,85 @@
 <?php
 
-namespace App\Models;
+namespace Tests\Feature;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+use App\Models\User;
+use App\Models\Recompensa;
 
-class Recompensa extends Model
+class RecompensasControllerTest extends TestCase
 {
-    use HasFactory;
+    use RefreshDatabase;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'recompensas';
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'CodRecom';
-
-    /**
-     * Indicates if the model's ID is auto-incrementing.
-     *
-     * @var bool
-     */
-    public $incrementing = true;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'Titulo',
-        'Descripcion',
-        'PuntosNecesarios',
-        'EsTemporal',
-        'FechaInicio',
-        'FechaFin',
-        'Stock',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'EsTemporal' => 'boolean',
-        'FechaInicio' => 'date',
-        'FechaFin' => 'date',
-        'PuntosNecesarios' => 'integer',
-        'Stock' => 'integer',
-    ];
-
-    /**
-     * Validation rules for the model.
-     *
-     * @return array
-     */
-    public static function rules()
+    /** @test */
+    public function usuario_autenticado_puede_ver_recompensas()
     {
-        return [
-            'Titulo' => 'required|string|max:100',
-            'Descripcion' => 'required|string',
-            'PuntosNecesarios' => 'required|integer|min:0',
-            'EsTemporal' => 'boolean',
-            'FechaInicio' => 'nullable|required_if:EsTemporal,true|date|before_or_equal:FechaFin',
-            'FechaFin' => 'nullable|required_if:EsTemporal,true|date|after_or_equal:FechaInicio',
-            'Stock' => 'required|integer|min:1',
+        $usuario = User::factory()->create([
+            'DNI' => 12345678,
+            'name' => 'Juan',
+            'apellido_paterno' => 'Espinoza',
+            'apellido_materno' => 'Zarate',
+            'direccion' => 'Av. Perú',
+            'Celular' => 987654321,
+            'email' => 'user@correo.com',
+            'password' => bcrypt('password'),
+            'rol' => 'usuario',
+            'Puntos' => 100,
+        ]);
+
+        $response = $this->actingAs($usuario)->get('/recompensas');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('recompensas');
+    }
+
+    /** @test */
+    public function admin_puede_ver_formulario_creacion_de_recompensas()
+    {
+        $admin = User::factory()->create([
+            'DNI' => 87654321,
+            'name' => 'Admin',
+            'apellido_paterno' => 'Perez',
+            'apellido_materno' => 'Lopez',
+            'direccion' => 'Jr. Central',
+            'Celular' => 999999999,
+            'email' => 'admin@correo.com',
+            'password' => bcrypt('adminpass'),
+            'rol' => 'admin',
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/recompensas/create');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('admin.recompensas');
+    }
+
+    /** @test */
+    public function admin_puede_guardar_una_nueva_recompensa()
+    {
+        $admin = User::factory()->create([
+            'DNI' => 99999999,
+            'name' => 'Admin',
+            'apellido_paterno' => 'Vega',
+            'apellido_materno' => 'Torres',
+            'direccion' => 'Mz. A Lote 2',
+            'Celular' => 912345678,
+            'email' => 'admin@correo.com',
+            'password' => bcrypt('adminpass'),
+            'rol' => 'admin',
+        ]);
+
+        $data = [
+            'Titulo' => 'Bolsa ecológica',
+            'Descripcion' => 'Bolsa hecha de material reciclado',
+            'PuntosNecesarios' => 50,
+            'EsTemporal' => false,
+            'Stock' => 100,
         ];
-    }
 
-    /**
-     * Custom error messages for validation rules.
-     *
-     * @return array
-     */
-    public static function messages()
-    {
-        return [
-            'FechaInicio.required_if' => 'La fecha de inicio es obligatoria para recompensas temporales.',
-            'FechaFin.required_if' => 'La fecha de fin es obligatoria para recompensas temporales.',
-            'Stock.min' => 'El stock mínimo debe ser 1.',
-            'PuntosNecesarios.min' => 'Los puntos necesarios no pueden ser negativos.',
-        ];
-    }
+        $response = $this->actingAs($admin)->post('/admin/recompensas', $data);
 
-    /**
-     * Scope for active temporal rewards (between start and end date).
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('EsTemporal', true)
-            ->where('FechaInicio', '<=', now())
-            ->where('FechaFin', '>=', now());
-    }
-
-    /**
-     * Scope for rewards with available stock.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeAvailable($query)
-    {
-        return $query->where('Stock', '>', 0);
-    }
-
-    /**
-     * Check if the reward is currently active (for temporal rewards).
-     *
-     * @return bool
-     */
-    public function isActive()
-    {
-        if (!$this->EsTemporal) {
-            return true; // Non-temporal rewards are always "active"
-        }
-
-        return now()->between($this->FechaInicio, $this->FechaFin);
-    }
-
-    /**
-     * Check if the reward is available (has stock).
-     *
-     * @return bool
-     */
-    public function isAvailable()
-    {
-        return $this->Stock > 0;
-    }
-
-    /**
-     * Relación: una recompensa tiene muchos canjes
-     */
-    public function canjes()
-    {
-        return $this->hasMany(Canje::class, 'CodRecom', 'CodRecom');
+        $response->assertRedirect(route('admin.recompensas.create'));
+        $this->assertDatabaseHas('recompensas', ['Titulo' => 'Bolsa ecológica']);
     }
 }

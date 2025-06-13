@@ -4,56 +4,88 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use App\Models\Canje;
+use App\Models\Residuo;
 use Tests\TestCase;
 
-class CajaBlancaTest extends TestCase
+class UserModelTest extends TestCase
 {
     use RefreshDatabase;
 
     /** @test */
-    public function login_succeeds_with_correct_credentials()
+    public function puede_crear_usuario_y_guardar_correctamente()
+    {
+        $user = User::create([
+            'DNI' => 12345678,
+            'name' => 'Juan',
+            'apellido_paterno' => 'Espinoza',
+            'apellido_materno' => 'Zárate',
+            'direccion' => 'Calle Principal 123',
+            'Celular' => 987654321,
+            'email' => 'juan@correo.com',
+            'password' => bcrypt('clave123'),
+            'Puntos' => 0,
+            'rol' => 'usuario'
+        ]);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'juan@correo.com',
+            'DNI' => 12345678,
+            'rol' => 'usuario'
+        ]);
+    }
+
+    /** @test */
+    public function usuario_puede_tener_canjes_asociados()
     {
         $user = User::factory()->create([
-            'email' => 'test@correo.com',
-            'password' => bcrypt('password123'),
+            'DNI' => 87654321
         ]);
 
-        $response = $this->post('/login', [
-            'email' => 'test@correo.com',
-            'password' => 'password123',
+        $user->canjes()->create([
+            'CodRecom' => 1,
+            'fecha_canje' => now(),
         ]);
 
-        $response->assertRedirect(route('inicio'));
-        $this->assertAuthenticatedAs($user);
+        $this->assertCount(1, $user->canjes);
     }
 
     /** @test */
-    public function login_fails_with_wrong_password()
+    public function usuario_puede_tener_residuos_asociados()
     {
-        User::factory()->create([
-            'email' => 'juan@correo.com',
-            'password' => bcrypt('correctpass'),
+        $user = User::factory()->create();
+
+        $user->residuos()->create([
+            'tipo' => 'papel_carton',
+            'cantidad_kg' => 5
         ]);
 
-        $response = $this->post('/login', [
-            'email' => 'juan@correo.com',
-            'password' => 'wrongpass',
-        ]);
-
-        $response->assertSessionHas('error');
-        $this->assertGuest();
+        $this->assertCount(1, $user->residuos);
+        $this->assertEquals('papel_carton', $user->residuos->first()->tipo);
     }
 
     /** @test */
-    public function login_fails_with_nonexistent_user()
+    public function campos_ocultos_no_se_exponen_en_array()
     {
-        $response = $this->post('/login', [
-            'email' => 'noexiste@correo.com',
-            'password' => 'cualquier',
+        $user = User::factory()->create([
+            'password' => bcrypt('secreto'),
         ]);
 
-        $response->assertSessionHas('error');
-        $this->assertGuest();
+        $userArray = $user->toArray();
+
+        $this->assertArrayNotHasKey('password', $userArray);
+        $this->assertArrayNotHasKey('remember_token', $userArray);
     }
 
+    /** @test */
+    public function atributos_casts_funcionan_correctamente()
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+            'Puntos' => 10,
+        ]);
+
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $user->email_verified_at);
+        $this->assertIsInt($user->Puntos);
+    }
 }

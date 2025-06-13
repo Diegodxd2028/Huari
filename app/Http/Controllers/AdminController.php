@@ -37,6 +37,8 @@ class AdminController extends Controller
         $request->validate([
             'dni' => 'required|exists:users,DNI',
             'puntos' => 'required|integer|min:1',
+        ], [
+            'dni.exists' => 'El usuario con ese DNI no existe.',
         ]);
 
         $usuario = User::where('DNI', $request->dni)->first();

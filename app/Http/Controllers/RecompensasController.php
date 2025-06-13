@@ -35,4 +35,19 @@ class RecompensasController extends Controller
             'recompensas' => $recompensas
         ]);
     }
+
+    public function create()
+{
+    return view('admin.recompensas');
+}
+
+public function store(Request $request)
+{
+    $validated = $request->validate(Recompensa::rules(), Recompensa::messages());
+
+    Recompensa::create($validated);
+
+    return redirect()->route('admin.recompensas.create')->with('success', 'Recompensa agregada correctamente.');
+}
+
 }

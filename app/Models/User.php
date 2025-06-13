@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Canje::class, 'DNI_usuario', 'DNI');
     }
+    public function residuos()
+{
+    return $this->hasMany(Residuo::class);
+}
+
 }
